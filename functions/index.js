@@ -1,29 +1,39 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+//add exrpess to make 4 method to do function individually
+const express = require('express')
+const app = express();
 
 admin.initializeApp();
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
 //
 
-
 //get database
-exports.getScreams = functions.https.onRequest((req, res) => {
-    admin.firestore().collection('screams').get()
-        .then(data => {
-            //create emty array and put all data in that
-            let screams = [];
-            data.forEach(doc => {
-                screams.push(doc.data())
+app.get('/screams',(req, res)=>{
+    admin.firestore()
+    .collection('screams')
+    .orderBy('createdAt','desc')
+    .get()
+    .then(data => {
+        //create emty array and put all data in that
+        let screams = [];
+        data.forEach(doc => {
+            screams.push({
+                screamId: doc.id,
+                body: doc.data().body,
+                userHandle:doc.data().userHandle,
+                createdAt: doc.data().createdAt,
             })
-            return res.json(screams);
-        }).catch(error => console.error(error));
-})
+        })
+        return res.json(screams);
+    }).catch(error => console.error(error));
+});
+
+
+
 //create post
-exports.createScreams = functions.https.onRequest((req, res) => {
-    if (req.method != 'POST') {
-        return res.status(400).json({ error: 'method not allowed' })
-    }
+app.post('/scream',(req, res) => {
     const newScream = {
         body: req.body.body,
         userHandle: req.body.userHandle,
@@ -40,3 +50,7 @@ exports.createScreams = functions.https.onRequest((req, res) => {
             console.error(error);
         });
 });
+
+
+//https://baseurl.com/api/ => change it 
+exports.api = functions.https.onRequest(app);
