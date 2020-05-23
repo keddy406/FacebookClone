@@ -9,6 +9,20 @@ admin.initializeApp();
 // // https://firebase.google.com/docs/functions/write-firebase-functions
 //
 
+
+const firebaseConfig = {
+    apiKey: "AIzaSyDk5H5sU3BgyKEdIJZ7pkW98nC0N4cOicw",
+    authDomain: "facebookclone-531c3.firebaseapp.com",
+    databaseURL: "https://facebookclone-531c3.firebaseio.com",
+    projectId: "facebookclone-531c3",
+    storageBucket: "facebookclone-531c3.appspot.com",
+    messagingSenderId: "51643556227",
+    appId: "1:51643556227:web:00fd1d1cefd34831dd56b6"
+  };
+const firebase = require('firebase');
+firebase.initializeApp(firebaseConfig);
+
+
 //get database
 app.get('/screams', (req, res) => {
     admin.firestore()
@@ -42,15 +56,37 @@ app.post('/scream', (req, res) => {
     admin.firestore()
         .collection('screams')
         .add(newScream)
-        .then(doc => {
+        .then((doc) => {
             res.json({ message: `document ${doc.id} created successfully` })
         })
-        .catch(error => {
+        .catch((error) => {
             res.status(500).json({ error: 'something wrong' })
             console.error(error);
         });
 });
 
+//sign up route
+app.post('/signup',(req, res)=>{
+    const newUser ={
+        email: req.body.email,
+        password: req.body.password,
+        confirmPassword: req.body.confirmPassword,
+        handle: req.body.handle,
+    };
+    //TODO:validate data
+    firebase
+    .auth()
+    .createUserWithEmailAndPassword(newUser.email,newUser.password)
+    .then((data)=>{
+        return res
+        .status(201)
+        .json({message:`user${data.user.uid} signed up successfully`});
+    })
+    .catch((error)=>{
+        console.error(error);
+        return res.status(500).json({error: error.code})
+    })
+})
 
 //https://baseurl.com/api/ => change it  //tokyo region server
 exports.api = functions.region('asia-northeast1').https.onRequest(app);
