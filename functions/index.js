@@ -37,7 +37,7 @@ app.post('/scream', (req, res) => {
     const newScream = {
         body: req.body.body,
         userHandle: req.body.userHandle,
-        createdAt: admin.firestore.Timestamp.fromDate(new Date()),
+        createdAt: new Date().toISOString(),
     };
     admin.firestore()
         .collection('screams')
@@ -52,5 +52,5 @@ app.post('/scream', (req, res) => {
 });
 
 
-//https://baseurl.com/api/ => change it 
-exports.api = functions.https.onRequest(app);
+//https://baseurl.com/api/ => change it  //tokyo region server
+exports.api = functions.region('asia-northeast1').https.onRequest(app);
