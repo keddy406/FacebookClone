@@ -47,7 +47,16 @@ app.get('/screams', (req, res) => {
         }).catch(error => console.error(error));
 });
 
-
+//validate data helper function
+const isEmail = (email) => {
+    const regEx = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    if (email.match(regEx)) return true;
+    else return false;
+}
+const isEmpty = (string) => {
+    if (string.trim() === '') return true;
+    else return false;
+}
 
 //create post
 app.post('/scream', (req, res) => {
@@ -68,6 +77,7 @@ app.post('/scream', (req, res) => {
         });
 });
 
+
 //sign up route
 app.post('/signup', (req, res) => {
     const newUser = {
@@ -76,9 +86,20 @@ app.post('/signup', (req, res) => {
         confirmPassword: req.body.confirmPassword,
         handle: req.body.handle,
     };
-    //TODO:validate data
+    //validate data
+    let errors = {};
+    if (isEmpty(newUser.email)) {
+        errors.emiail = 'Must not be empty'
+    } else if (!isEmail(newUser.email)) {
+        errors.email = "Must be a valid address"
+    }
+    if (isEmpty(newUser.password)) errors.password = "Must not be empty";
+    if (newUser.password !== newUser.confirmPassword) errors.confirmPassword = 'Password must match';
+    if (isEmpty(newUser.handle)) errors.handle = "Must not be empty";
+    //print error message
+    if (Object.keys(errors).length > 0) return res.status(400).json(errors);
     //check user exist
-    let token,userId;
+    let token, userId;
     db.doc(`/users/${newUser.handle}`).get()
         .then(doc => {
             if (doc.exists) {
@@ -93,18 +114,18 @@ app.post('/signup', (req, res) => {
         })
         .then(idtoken => {
             // let usercredentails store in database
-            token= idtoken;
+            token = idtoken;
             const userCredentials = {
-            handle: newUser.handle,
-            email:newUser.email,
-            createdAt:new Date().toISOString(),
-            userId
+                handle: newUser.handle,
+                email: newUser.email,
+                createdAt: new Date().toISOString(),
+                userId
 
             };
-           return db.doc(`/users/${newUser.handle}`).set(userCredentials);
+            return db.doc(`/users/${newUser.handle}`).set(userCredentials);
         })
-        .then(()=>{
-            return res.status(201).json({token})
+        .then(() => {
+            return res.status(201).json({ token })
         })
         .catch(error => {
             console.error(error);
