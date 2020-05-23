@@ -18,14 +18,17 @@ const firebaseConfig = {
     storageBucket: "facebookclone-531c3.appspot.com",
     messagingSenderId: "51643556227",
     appId: "1:51643556227:web:00fd1d1cefd34831dd56b6"
-  };
+};
 const firebase = require('firebase');
 firebase.initializeApp(firebaseConfig);
+
+const db = admin.firestore();
+
 
 
 //get database
 app.get('/screams', (req, res) => {
-    admin.firestore()
+    db
         .collection('screams')
         .orderBy('createdAt', 'desc')
         .get()
@@ -53,7 +56,7 @@ app.post('/scream', (req, res) => {
         userHandle: req.body.userHandle,
         createdAt: new Date().toISOString(),
     };
-    admin.firestore()
+    db
         .collection('screams')
         .add(newScream)
         .then((doc) => {
@@ -66,27 +69,40 @@ app.post('/scream', (req, res) => {
 });
 
 //sign up route
-app.post('/signup',(req, res)=>{
-    const newUser ={
+app.post('/signup', (req, res) => {
+    const newUser = {
         email: req.body.email,
         password: req.body.password,
         confirmPassword: req.body.confirmPassword,
         handle: req.body.handle,
     };
     //TODO:validate data
-    firebase
-    .auth()
-    .createUserWithEmailAndPassword(newUser.email,newUser.password)
-    .then((data)=>{
-        return res
-        .status(201)
-        .json({message:`user${data.user.uid} signed up successfully`});
-    })
-    .catch((error)=>{
-        console.error(error);
-        return res.status(500).json({error: error.code})
-    })
-})
+    //check user exist
+    db.doc(`/users/${newUser.handle}`).get()
+        .then(doc => {
+            if (doc.exists) {
+                return res.status(400).json({ handle: 'this handle is already taken' })
+            } else {
+                return firebase.auth().createUserWithEmailAndPassword(newUser.email, newUser.password);
+            }
+        })
+        .then(data => {
+            return data.user.getIdToken();
+        })
+        .then(token => {
+            return res.status(201).json({ token });
+        })
+        .catch(error => {
+            console.error(error);
+            //error code from postman get this error means email already in use
+            if (error.code == "auth/email-already-in-use") {
+                return res.status(400).json({ email: 'email is already in used' })
+            }
+            else {
+                return res.status(500).json({ error: error.code });
+            }
+        })
+});
 
 //https://baseurl.com/api/ => change it  //tokyo region server
 exports.api = functions.region('asia-northeast1').https.onRequest(app);
