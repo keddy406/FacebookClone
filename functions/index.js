@@ -10,30 +10,30 @@ admin.initializeApp();
 //
 
 //get database
-app.get('/screams',(req, res)=>{
+app.get('/screams', (req, res) => {
     admin.firestore()
-    .collection('screams')
-    .orderBy('createdAt','desc')
-    .get()
-    .then(data => {
-        //create emty array and put all data in that
-        let screams = [];
-        data.forEach(doc => {
-            screams.push({
-                screamId: doc.id,
-                body: doc.data().body,
-                userHandle:doc.data().userHandle,
-                createdAt: doc.data().createdAt,
+        .collection('screams')
+        .orderBy('createdAt', 'desc')
+        .get()
+        .then(data => {
+            //create emty array and put all data in that
+            let screams = [];
+            data.forEach(doc => {
+                screams.push({
+                    screamId: doc.id,
+                    body: doc.data().body,
+                    userHandle: doc.data().userHandle,
+                    createdAt: doc.data().createdAt,
+                })
             })
-        })
-        return res.json(screams);
-    }).catch(error => console.error(error));
+            return res.json(screams);
+        }).catch(error => console.error(error));
 });
 
 
 
 //create post
-app.post('/scream',(req, res) => {
+app.post('/scream', (req, res) => {
     const newScream = {
         body: req.body.body,
         userHandle: req.body.userHandle,
