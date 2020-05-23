@@ -58,20 +58,45 @@ const isEmpty = (string) => {
     else return false;
 }
 
-//create post
-app.post('/scream', (req, res) => {
+//Bearer [token]
+const FBAuth = (req, res, next) => {
+    let idToken;
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+        idToken = req.headers.authorization.split('Bearer ')[1];
+    } else {
+        console.error('No token found');
+        return res.stauts(403).json({ error: 'Unauthorized' })
+    }
+    admin.auth().verifyIdToken(idToken)
+        .then(decodedToken => {
+            req.user = decodedToken;
+            console.log(decodedToken);
+            return db.collection('users').where('userId', '==', req.user.uid).limit(1).get();
+        })
+        .then(data => {
+            req.user.handle = data.docs[0].data().handle;
+            return next();
+        })
+        .catch(err => {
+            console.error('Error while verifying token', err);
+            return res.status(403).json(err);
+        })
+}
+
+//create post on scream
+app.post('/scream', FBAuth, (req, res) => {
+    if (req.body.body.trim() === '') {
+        return res.status(400).json({ body: 'Body must not be empty' });
+    }
     const newScream = {
         body: req.body.body,
-        userHandle: req.body.userHandle,
+        userHandle: req.user.handle,
         createdAt: new Date().toISOString(),
     };
-    db
-        .collection('screams')
-        .add(newScream)
-        .then((doc) => {
+    db.collection('screams').add(newScream)
+    .then((doc) => {
             res.json({ message: `document ${doc.id} created successfully` })
-        })
-        .catch((error) => {
+        }).catch((error) => {
             res.status(500).json({ error: 'something wrong' })
             console.error(error);
         });
@@ -163,7 +188,7 @@ app.post('/login', (req, res) => {
             console.error(err);
             if (err.code === 'auth/wrong-password') {
                 return res.status(403).json({ general: 'Wrong credentials, please try again' })
-            }else return res.status(500).json({ error: err.code });
+            } else return res.status(500).json({ error: err.code });
         })
 })
 
