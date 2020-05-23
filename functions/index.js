@@ -78,6 +78,7 @@ app.post('/signup', (req, res) => {
     };
     //TODO:validate data
     //check user exist
+    let token,userId;
     db.doc(`/users/${newUser.handle}`).get()
         .then(doc => {
             if (doc.exists) {
@@ -87,10 +88,23 @@ app.post('/signup', (req, res) => {
             }
         })
         .then(data => {
+            userId = data.user.uid;
             return data.user.getIdToken();
         })
-        .then(token => {
-            return res.status(201).json({ token });
+        .then(idtoken => {
+            // let usercredentails store in database
+            token= idtoken;
+            const userCredentials = {
+            handle: newUser.handle,
+            email:newUser.email,
+            createdAt:new Date().toISOString(),
+            userId
+
+            };
+           return db.doc(`/users/${newUser.handle}`).set(userCredentials);
+        })
+        .then(()=>{
+            return res.status(201).json({token})
         })
         .catch(error => {
             console.error(error);
