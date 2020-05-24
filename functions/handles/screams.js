@@ -4,7 +4,7 @@ exports.getAllScreams = (req, res) => {
     db.collection('screams')
         .orderBy('createdAt', 'desc')
         .get()
-        .then(data => {
+        .then((data) => {
             //create emty array and put all data in that
             let screams = [];
             data.forEach(doc => {
@@ -18,7 +18,7 @@ exports.getAllScreams = (req, res) => {
                 });
             });
             return res.json(screams);
-        }).catch(err => {
+        }).catch((err) => {
             console.error(err);
             res.status(500).json({ error: err.code })
         });

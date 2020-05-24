@@ -21,18 +21,18 @@ exports.signup = (req, res) => {
     //check user exist
     let token, userId;
     db.doc(`/users/${newUser.handle}`).get()
-        .then(doc => {
+        .then((doc) => {
             if (doc.exists) {
                 return res.status(400).json({ handle: 'this handle is already taken' })
             } else {
                 return firebase.auth().createUserWithEmailAndPassword(newUser.email, newUser.password);
             }
         })
-        .then(data => {
+        .then((data) => {
             userId = data.user.uid;
             return data.user.getIdToken();
         })
-        .then(idtoken => {
+        .then((idtoken) => {
             // let usercredentails store in database
             token = idtoken;
             const userCredentials = {
@@ -47,14 +47,14 @@ exports.signup = (req, res) => {
         .then(() => {
             return res.status(201).json({ token })
         })
-        .catch(err => {
+        .catch((err) => {
             console.error(err);
             //error code from postman get this error means email already in use
             if (err.code == "auth/email-already-in-use") {
                 return res.status(400).json({ email: 'email is already in used' })
             }
             else {
-                return res.status(500).json({  general: "Something went wrong, please try again"});
+                return res.status(500).json({ general: "Something went wrong, please try again" });
             }
         })
 }
@@ -71,16 +71,16 @@ exports.login = (req, res) => {
 
 
     firebase.auth().signInWithEmailAndPassword(user.email, user.password)
-        .then(data => {
+        .then((data) => {
             return data.user.getIdToken();
         })
-        .then(token => {
+        .then((token) => {
             return res.json({ token });
         })
-        .catch(err => {
+        .catch((err) => {
             console.error(err);
-            if (err.code === 'auth/wrong-password') {
-                return res.status(403).json({ general: 'Wrong credentials, please try again' })
-            } else return res.status(500).json({ error: err.code });
+            return res
+                .status(403)
+                .json({ general: "Wrong credentials, please try again" });
         })
 }
