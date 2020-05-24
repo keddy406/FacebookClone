@@ -8,7 +8,7 @@ const { getAllScreams, postOneScream } = require("./handles/screams")
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
 //
-const { signup, login } = require('./handles/users')
+const { signup, login, uploadImage } = require('./handles/users')
 const FBAuth = require('./util/fbAuth')
 
 
@@ -23,7 +23,7 @@ app.post('/scream', FBAuth, postOneScream);
 app.post('/signup', signup);
 //login
 app.post('/login', login);
-
+app.post('/user/image', FBAuth, uploadImage);
 
 
 
